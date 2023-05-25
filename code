@@ -1,0 +1,45 @@
+import requests
+from bs4 import BeautifulSoup
+from collections import Counter
+import json
+from flask import Flask, request, jsonify
+
+app = Flask(_name_)
+
+def get_word_frequencies(url):
+    # Fetch the HTML content of the URL
+    response = requests.get(url)
+    html_content = response.text
+    
+    # Parse the HTML using BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Find all text content within HTML tags
+    text_elements = soup.findAll(text=True)
+    
+    # Extract words and count their occurrences
+    words = []
+    for text in text_elements:
+        # Split the text into words by whitespace
+        words += text.strip().split()
+    
+    # Count the occurrences of each word
+    word_frequencies = Counter(words)
+    
+    return word_frequencies
+
+@app.route('/analyze', methods=['POST'])
+def analyze_website():
+    # Get the URL from the request data
+    url = request.json['url']
+    
+    # Get the word frequencies
+    word_frequencies = get_word_frequencies(url)
+    
+    # Convert the word frequencies to JSON
+    result = [{'word': word, 'count': count} for word, count in word_frequencies.items()]
+    
+    return jsonify(result)
+
+if _name_ == '_main_':
+    app.run()
